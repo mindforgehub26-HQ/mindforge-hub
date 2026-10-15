@@ -1,9 +1,8 @@
-// Compatibility copy. Authoritative rules: firebase/storage.rules
 rules_version = '2';
 service firebase.storage {
  match /b/{bucket}/o {
   function signed() { return request.auth != null && request.auth.token.email_verified == true; }
-  function admin() { return signed() && request.auth.token.get('admin', false) == true && firestore.get(/databases/(default)/documents/access/$(request.auth.uid)).data.role == 'admin'; }
+  function admin() { return signed() && request.auth.token.email in ['mindforgehub26@gmail.com', 'dayanandmk.dev@gmail.com'] && request.auth.token.firebase.sign_in_provider == 'google.com' && request.auth.token.get('admin', false) == true && firestore.get(/databases/(default)/documents/access/$(request.auth.uid)).data.role == 'admin'; }
   match /payment-proofs/{uid}/{clientId}/{fileId} {
    allow read: if admin() || (signed() && request.auth.uid == uid);
    allow create: if signed() && request.auth.uid == uid && firestore.get(/databases/(default)/documents/clients/$(clientId)).data.ownerUid == uid && request.resource.size <= 5*1024*1024 && request.resource.contentType.matches('image/(png|jpeg|webp)');

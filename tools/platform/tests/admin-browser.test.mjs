@@ -67,7 +67,7 @@ async function login(email) {
 }
 
 try {
-  await login("owner-qa@example.test");
+  await login("mindforgehub26@gmail.com");
   const projects = await db.collection("projects").get();
   const id = projects.docs[0].id;
   for (const theme of ["light", "dark"]) {

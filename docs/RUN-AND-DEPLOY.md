@@ -109,3 +109,26 @@ The website build produces `artifacts/mindforge-hub/dist/public` relative to the
 Both configurations use `pnpm install --frozen-lockfile` and `pnpm --filter @workspace/mindforge-hub build`. Select framework preset Other. For the nested root, enable inclusion of source files outside the Root Directory so workspace packages and shared assets remain available. Each location has its own `vercel.json` with the corresponding output path.
 
 If the build finishes with “Generated 12 public pages” but Vercel reports no output directory named `public`, the compile succeeded and Vercel is looking in the wrong place. In Settings > Build and Deployment, match the Root Directory and Output Directory using the table above. Deploy the latest PR commit containing the corrected nested configuration; redeploying an old failed deployment retains its old source configuration. Do not use the source `public` folder as the build output.
+
+## Google signup and the two administrator accounts
+
+Use `/sign-in` to create an account or log in with the same Google button. The homepage, navigation, and footer link to it. Customers go to `/dashboard`; provisioned administrators go to `/admin`. The footer also links directly to the admin portal.
+
+Only `mindforgehub26@gmail.com` and `dayanandmk.dev@gmail.com` are eligible administrators. The UI, Firestore rules, Storage rules, and provisioning CLI enforce this list. Both accounts must have verified Google identities, the signed `admin` custom claim, and a server-owned `access/{uid}` admin record. Email alone does not grant access. Other accounts remain customers even if an old admin claim or record exists.
+
+The Firebase project owner must:
+1. Enable Authentication > Sign-in method > Google and choose a support email.
+2. Add the actual Vercel website hostname under Authentication > Settings > Authorized domains.
+3. Put the real Firebase web configuration from `.env.example` in Vercel for the intended environments, with `VITE_USE_EMULATORS=false`, then redeploy. Never put service-account credentials in Vite variables.
+4. Deploy the updated Firestore rules to the confirmed project. On Spark, deploy only `firestore:rules,firestore:indexes`; Storage is optional and requires billing.
+5. Have both intended administrators sign in once. Verify each user's email and UID in Firebase Authentication, then run the existing provisioning CLI for each UID using trusted local Admin SDK credentials. Sign out and sign in again afterward.
+
+These steps require access to the owner's Firebase project. Publishing the website does not enable the Google provider, deploy database rules, or provision live accounts automatically.
+
+### Keeping the core platform on Firebase Spark
+
+Firebase Spark currently requires no payment method. Google authentication and Firestore support the enquiry/project/admin workflows within published quotas. Firestore Standard includes 1 GiB storage, 50,000 reads/day, and 20,000 writes/day. Exhausting quotas can interrupt service; this is not an unlimited or lifetime guarantee.
+
+Do not enable paid Cloud Functions, phone authentication, or upgrade to Blaze for this setup. Cloud Storage now requires Blaze; existing legacy payment-proof uploads therefore are not part of the Spark-only setup. The new enquiry/project/milestone dashboards do not require file uploads. Keep existing data intact and use email or WhatsApp for attachments if staying on Spark. Do not downgrade an existing billed project without reviewing its existing services.
+
+Sources: https://firebase.google.com/pricing and https://firebase.google.com/docs/storage/faqs-storage-changes-announced-sept-2024 (checked October 15, 2026).

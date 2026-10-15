@@ -17,7 +17,7 @@ test('Every public page has pre-rendered content, unique metadata and a canonica
   assert.equal(schema['@context'],'https://schema.org');
   assert.ok(!s.includes('917000000000')); assert.ok(!s.includes('500+ Projects'));
   for(const [,href] of s.matchAll(/href="(\/(?!assets\/)[^"#?]*)"/g)) {
-   if(href==='/' || href.endsWith('.png') || href.endsWith('.jpg') || href==='/track' || href==='/sign-in' || href.startsWith('/dashboard')) continue;
+   if(href==='/' || href.endsWith('.png') || href.endsWith('.jpg') || href==='/track' || href==='/sign-in' || href==='/admin' || href.startsWith('/dashboard')) continue;
    assert.ok(publicPaths.includes(href),`${p} links to unknown route ${href}`);
   }
  }

@@ -34,7 +34,7 @@ export default function Navbar() {
         <div className="nav-actions">
           <ThemeToggle />
           <Link className="nav-sign-in" href="/sign-in">
-            Sign in
+            Sign up / Sign in
           </Link>
           <Link className="btn-primary nav-cta" href="/contact">
             Discuss your project
@@ -74,7 +74,7 @@ export default function Navbar() {
             </Link>
           ))}
           <Link href="/sign-in" onClick={() => setOpen(false)}>
-            Sign in / My workspace
+            Google signup / My workspace
           </Link>
           <Link
             href="/contact"

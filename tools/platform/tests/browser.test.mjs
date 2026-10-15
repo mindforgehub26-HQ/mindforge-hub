@@ -183,8 +183,8 @@ try {
     .getByRole("heading", { name: "Administrator access required" })
     .waitFor();
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
-  await login("owner-qa@example.test");
-  const owner = await auth.getUserByEmail("owner-qa@example.test");
+  await login("mindforgehub26@gmail.com");
+  const owner = await auth.getUserByEmail("mindforgehub26@gmail.com");
   await auth.setCustomUserClaims(owner.uid, { admin: true });
   await db.doc("access/" + owner.uid).set({ role: "admin" });
   await page.evaluate(async () => {

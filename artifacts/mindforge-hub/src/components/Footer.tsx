@@ -40,7 +40,8 @@ export default function Footer() {
             <a href={site.instagram} target="_blank" rel="noopener noreferrer">
               Instagram ↗
             </a>
-            <Link href="/sign-in">Your project workspace</Link>
+            <Link href="/sign-in">Google signup / Customer workspace</Link>
+            <Link href="/admin">Admin portal</Link>
           </div>
         </div>
         <div className="integrity-note">

@@ -40,6 +40,7 @@ export default function Home() {
               <ArrowRight size={17} />
             </Link>
           </div>
+          <Link href="/sign-in" className="btn-outline mt-5">Sign up / Sign in with Google</Link>
           <p className="hero-footnote">
             Clear scope. Agreed pricing. Support with a purpose.
           </p>
