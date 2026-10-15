@@ -14,7 +14,7 @@
       "continue": true
     },
     {
-      "src": "/(?:admin|dashboard)(?:/.*)?/?",
+      "src": "/(?:admin|dashboard|account)(?:/.*)?/?",
       "dest": "/app.html",
       "headers": {
         "X-Robots-Tag": "noindex, nofollow",

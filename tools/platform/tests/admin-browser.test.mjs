@@ -62,12 +62,11 @@ async function login(email) {
       sdk.GoogleAuthProvider.credential(token),
     );
   }, email);
-  await page.waitForURL(/\/(dashboard|admin)$/);
-  await page.locator(".workspace").waitFor();
+  await page.waitForURL(/\/(admin)?$/);
 }
 
 try {
-  await login("owner-qa@example.test");
+  await login("mindforgehub26@gmail.com");
   const projects = await db.collection("projects").get();
   const id = projects.docs[0].id;
   for (const theme of ["light", "dark"]) {
@@ -143,13 +142,13 @@ try {
   await page.getByRole("button", { name: "Open workspace navigation" }).click();
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await login("second-qa@example.test");
-  await go("/dashboard/projects/" + id);
+  await go("/account/projects/" + id);
   await page
     .getByText("This record is unavailable or you do not have access.", {
       exact: true,
     })
     .waitFor();
-  await go("/dashboard");
+  await go("/account/projects");
   await page
     .getByRole("heading", { name: "Your next project starts here" })
     .waitFor();

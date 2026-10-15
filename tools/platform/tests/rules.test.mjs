@@ -35,7 +35,8 @@ after(async () => {
 });
 const context = (uid, claims = {}) =>
   env.authenticatedContext(uid, {
-    email: uid + "@example.test",
+    email: uid === "owner" ? "mindforgehub26@gmail.com" : uid + "@example.test",
+    firebase: { sign_in_provider: "google.com" },
     email_verified: true,
     ...claims,
   });
@@ -350,4 +351,19 @@ test("Storage enforces ownership, content type and authentication for legacy pay
   await assertFails(getBytes(ref(other, path)));
   await assertFails(getBytes(ref(anon, path)));
   await assertSucceeds(getBytes(ref(owner, path)));
+});
+
+
+test("Only the two verified Google identities may use a provisioned admin role", async () => {
+  for (const email of ["mindforgehub26@gmail.com", "dayanandmk.dev@gmail.com"]) {
+    await assertSucceeds(getDocs(collection(db("owner", { admin: true, email }), "users")));
+  }
+  for (const claims of [
+    { email: "other@gmail.com" },
+    { email: "mindforgehub26@gmail.com.attacker.test" },
+    { email_verified: false },
+    { firebase: { sign_in_provider: "password" } },
+  ]) {
+    await assertFails(getDocs(collection(db("owner", { admin: true, ...claims }), "users")));
+  }
 });

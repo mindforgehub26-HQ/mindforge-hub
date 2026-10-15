@@ -40,8 +40,8 @@ async function go(p) {
   await page.goto("http://localhost:5173" + p);
   await page.locator("h1").waitFor();
 }
-async function login(email) {
-  await page.goto("http://localhost:5173/sign-in");
+async function login(email, destination = "/sign-in") {
+  await page.goto("http://localhost:5173" + destination);
   await page.getByRole("button", { name: "Continue with Google" }).waitFor();
   await page.evaluate(async (email) => {
     const { auth } = await import("/src/firebase/config.ts");
@@ -70,8 +70,7 @@ async function login(email) {
       sdk.GoogleAuthProvider.credential(token),
     );
   }, email);
-  await page.waitForURL(/\/(dashboard|admin)$/);
-  await page.locator(".workspace").waitFor();
+  await page.waitForURL(/\/(admin|account\/new)?$/);
 }
 try {
   const routes = [
@@ -140,29 +139,25 @@ try {
     .click();
   assert.equal(new URL(page.url()).pathname, "/services");
   await go("/contact");
-  await page.getByLabel("Your name").fill("QA & Example");
-  await page.getByLabel(/^Domain/).selectOption("Python");
-  await page.getByLabel("Current stage").selectOption("Developing");
-  await page
-    .getByLabel("Requirements and questions")
-    .fill("A synthetic test of a Python project brief & encoding.");
-  await page.getByRole("button", { name: "Prepare WhatsApp Message" }).click();
-  let link = page.getByRole("link", {
-    name: "Open WhatsApp to review and send",
-  });
-  const wa = new URL(await link.getAttribute("href"));
-  assert.equal(wa.pathname, "/918056727034");
-  assert.ok(wa.searchParams.get("text").includes("QA & Example"));
-  await page.getByLabel("Your name").fill("Changed");
-  assert.equal(await link.count(), 0);
-  checks.push("Mobile menu and unsent WhatsApp draft encoding/reset");
+  assert.equal(await page.locator("form").count(), 0);
+  await page.getByRole("link", {name:"Submit enquiry", exact:true}).click();
+  await page.getByRole("button", {name:"Continue with Google"}).waitFor();
+  assert.equal(new URL(page.url()).pathname, "/account/new");
+  checks.push("Visitor enquiry submission requires authentication");
+  await login("customer-qa@example.test", "/account/new");
+  await page.getByLabel("Project title or idea").waitFor();
+  assert.equal(new URL(page.url()).pathname, "/account/new");
+  checks.push("Sign-in from enquiry returns directly to the form");
+  await page.evaluate(async () => { const {auth} = await import("/src/firebase/config.ts"); const {signOut} = await import("/node_modules/.vite/deps/firebase_auth.js"); await signOut(auth); });
   await login("customer-qa@example.test");
   await page.reload();
-  await page.getByRole("heading", { name: "Welcome, QA." }).waitFor();
+  assert.equal(new URL(page.url()).pathname, "/");
+  await page.getByRole("button", {name:"Open navigation"}).click();
+  await page.locator("#mobile-navigation").getByRole("button", {name:"Sign out"}).waitFor();
   checks.push(
     "First customer sign-in, profile creation and persistent session",
   );
-  await go("/dashboard/new");
+  await go("/account/new");
   await page.getByLabel("Project title or idea").fill("QA booking project");
   await page.getByLabel(/^Domain/).selectOption("Python");
   await page.getByLabel("Technology preferences").fill("Flask");
@@ -175,7 +170,7 @@ try {
   await page
     .getByText("Your enquiry has been saved.", { exact: false })
     .waitFor();
-  await go("/dashboard/enquiries");
+  await go("/account/enquiries");
   await page.getByText("QA booking project", { exact: true }).waitFor();
   checks.push("Customer enquiry saves and appears in own list");
   await go("/admin");
@@ -183,8 +178,8 @@ try {
     .getByRole("heading", { name: "Administrator access required" })
     .waitFor();
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
-  await login("owner-qa@example.test");
-  const owner = await auth.getUserByEmail("owner-qa@example.test");
+  await login("mindforgehub26@gmail.com");
+  const owner = await auth.getUserByEmail("mindforgehub26@gmail.com");
   await auth.setCustomUserClaims(owner.uid, { admin: true });
   await db.doc("access/" + owner.uid).set({ role: "admin" });
   await page.evaluate(async () => {
@@ -278,7 +273,7 @@ try {
   });
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await login("customer-qa@example.test");
-  await go("/dashboard/projects/" + projectId);
+  await go("/account/projects/" + projectId);
   await page
     .getByText("QA scope: build and explain the booking workflow.", {
       exact: true,
@@ -302,11 +297,11 @@ try {
   for (const width of [320, 768, 1440]) {
     await page.setViewportSize({ width, height: 950 });
     for (const route of [
-      "/dashboard",
-      "/dashboard/enquiries",
-      "/dashboard/projects/" + projectId,
-      "/dashboard/new",
-      "/dashboard/settings",
+      "/account/projects",
+      "/account/enquiries",
+      "/account/projects/" + projectId,
+      "/account/new",
+      "/account/settings",
     ]) {
       await go(route);
       assert.ok(
@@ -317,7 +312,7 @@ try {
       );
     }
   }
-  await go("/dashboard");
+  await go("/account/projects");
   await page.screenshot({
     path: new URL("customer-light.png", output).pathname.replace(
       /^\/(\w:)/,
