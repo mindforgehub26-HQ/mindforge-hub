@@ -12,7 +12,7 @@ export default function Customer() {
   const { user } = useSession();
   const projects = useRows("projects", user.uid),
     enquiries = useRows("enquiries", user.uid);
-  const section = path.slice("/dashboard".length);
+  const section = path.slice("/account".length);
   return (
     <Shell>
       {section.startsWith("/projects/") ? (
@@ -33,7 +33,7 @@ export default function Customer() {
             }
             description="A clear view of your project, from first question to the next milestone."
             action={
-              <Link className="btn-primary" href="/dashboard/new">
+              <Link className="btn-primary" href="/account/new">
                 Submit a project enquiry
               </Link>
             }
@@ -88,7 +88,7 @@ export default function Customer() {
                       {projects.rows.map((p) => (
                         <Link
                           key={p.id}
-                          href={"/dashboard/projects/" + p.id}
+                          href={"/account/projects/" + p.id}
                           className="record-card"
                         >
                           <div className="flex justify-between gap-3">
@@ -107,7 +107,7 @@ export default function Customer() {
                     </div>
                   ) : (
                     <Empty title="Your next project starts here">
-                      <Link href="/dashboard/new" className="text-link">
+                      <Link href="/account/new" className="text-link">
                         Tell us what you are building.
                       </Link>
                     </Empty>
@@ -155,7 +155,7 @@ export default function Customer() {
                                   {e.projectId && (
                                     <Link
                                       href={
-                                        "/dashboard/projects/" + e.projectId
+                                        "/account/projects/" + e.projectId
                                       }
                                       className="text-link"
                                     >
@@ -498,7 +498,7 @@ function RecentProgress({ id, title }: { id: string; title: string }) {
           </p>
         </>
       )}
-      <Link className="text-link mt-5" href={"/dashboard/projects/" + id}>
+      <Link className="text-link mt-5" href={"/account/projects/" + id}>
         Open project
       </Link>
     </article>

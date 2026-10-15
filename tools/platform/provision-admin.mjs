@@ -37,6 +37,8 @@ if (
   throw new Error(
     "Only a verified Google account may be provisioned. Confirm the intended owner UID in Firebase first.",
   );
+if (args.role === "admin" && !["mindforgehub26@gmail.com", "dayanandmk.dev@gmail.com"].includes(user.email))
+  throw new Error("This Google account is not on the administrator allowlist.");
 console.log(
   JSON.stringify({
     project: args.project,

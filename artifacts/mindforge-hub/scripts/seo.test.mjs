@@ -17,7 +17,7 @@ test('Every public page has pre-rendered content, unique metadata and a canonica
   assert.equal(schema['@context'],'https://schema.org');
   assert.ok(!s.includes('917000000000')); assert.ok(!s.includes('500+ Projects'));
   for(const [,href] of s.matchAll(/href="(\/(?!assets\/)[^"#?]*)"/g)) {
-   if(href==='/' || href.endsWith('.png') || href.endsWith('.jpg') || href==='/track' || href==='/sign-in' || href.startsWith('/dashboard')) continue;
+   if(href==='/' || href.endsWith('.png') || href.endsWith('.jpg') || href==='/track' || href==='/sign-in' || href==='/admin' || href.startsWith('/account')) continue;
    assert.ok(publicPaths.includes(href),`${p} links to unknown route ${href}`);
   }
  }
@@ -32,10 +32,9 @@ test('Private shell and 404 cannot be indexed; Vercel fallback returns 404',asyn
  for(const file of ['app.html','404.html']) { const s=await readFile(new URL('../dist/public/'+file,import.meta.url),'utf8'); assert.ok(s.includes('noindex,nofollow')); assert.ok(!s.includes('rel="canonical"')); }
  const config=JSON.parse(await readFile(new URL('../vercel.json',import.meta.url),'utf8')); assert.equal(config.routes.at(-1).status,404);
 });
-test('Enquiry form labels resolve and WhatsApp uses the confirmed business number',async()=>{
+test('Enquiry submission and project status use protected account routes',async()=>{
  const s=await html('/contact');
- for(const [,id] of s.matchAll(/<label[^>]*for="([^"]+)"/g)) assert.ok(s.includes(`id="${id}"`),id);
- assert.ok(s.includes('https://wa.me/918056727034?text='));
- assert.ok(s.includes('Prepare WhatsApp Message'));
- assert.ok(!s.includes('Save enquiry for a reply'),'Database enquiries default to disabled until rules are verified');
+ assert.ok(s.includes('href="/account/new"'));
+ assert.ok(s.includes('href="/account/projects"'));
+ assert.ok(!s.includes('<form'));
 });

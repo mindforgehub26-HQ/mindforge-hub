@@ -2,7 +2,7 @@ rules_version = '2';
 service cloud.firestore {
  match /databases/{database}/documents {
   function signed() { return request.auth != null && request.auth.token.email_verified == true; }
-  function admin() { return signed() && request.auth.token.get('admin', false) == true && exists(/databases/$(database)/documents/access/$(request.auth.uid)) && get(/databases/$(database)/documents/access/$(request.auth.uid)).data.role == 'admin'; }
+  function admin() { return signed() && request.auth.token.email in ['mindforgehub26@gmail.com', 'dayanandmk.dev@gmail.com'] && request.auth.token.firebase.sign_in_provider == 'google.com' && request.auth.token.get('admin', false) == true && exists(/databases/$(database)/documents/access/$(request.auth.uid)) && get(/databases/$(database)/documents/access/$(request.auth.uid)).data.role == 'admin'; }
   function text(value, min, max) { return value is string && value.size() >= min && value.size() <= max; }
   function logged(path, id) { return text(id, 10, 100) && !exists(/databases/$(database)/documents/activity/$(id)) && getAfter(/databases/$(database)/documents/activity/$(id)).data.actorUid == request.auth.uid && getAfter(/databases/$(database)/documents/activity/$(id)).data.entityPath == path && getAfter(/databases/$(database)/documents/activity/$(id)).data.createdAt == request.time; }
   function validProject(d) { return d.keys().hasOnly(['ownerUid','title','domain','scope','status','deadline','price','sourceEnquiryId','createdAt','updatedAt','auditId']) && text(d.ownerUid,1,128) && exists(/databases/$(database)/documents/users/$(d.ownerUid)) && text(d.title,3,160) && text(d.domain,1,100) && text(d.scope,0,10000) && d.status in ['Awaiting Confirmation','Confirmed','In Progress','Awaiting Customer Review','Completed','Cancelled'] && text(d.deadline,0,10) && d.price is number && d.price >= 0 && d.price <= 10000000 && text(d.sourceEnquiryId,0,128) && d.updatedAt == request.time; }
@@ -57,6 +57,14 @@ service cloud.firestore {
   match /leads/{id} { allow read, write: if admin(); }
   match /paymentProofs/{id} { allow read, update, delete: if admin(); allow create: if signed() && request.resource.data.keys().hasOnly(['customerId','ownerUid','txnId','amount','screenshotURL','notes','status','timestamp']) && request.resource.data.ownerUid == request.auth.uid && get(/databases/$(database)/documents/clients/$(request.resource.data.customerId)).data.ownerUid == request.auth.uid && text(request.resource.data.txnId,1,150) && request.resource.data.amount is number && request.resource.data.amount > 0 && request.resource.data.amount < 10000000 && text(request.resource.data.screenshotURL,0,2048) && text(request.resource.data.notes,0,2000) && request.resource.data.status == 'pending' && request.resource.data.timestamp == request.time; }
   match /verifiedTransactions/{id} { allow read, write: if admin(); }
+  match /visitorPresence/{uid} {
+   function visitor() { return request.auth != null && request.auth.uid == uid && request.auth.token.firebase.sign_in_provider == 'anonymous'; }
+   allow get: if visitor() || admin();
+   allow list: if admin();
+   allow create: if visitor() && request.resource.data.keys().hasOnly(['createdAt','lastSeen']) && request.resource.data.createdAt == request.time && request.resource.data.lastSeen == request.time;
+   allow update: if visitor() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastSeen']) && request.resource.data.lastSeen == request.time && resource.data.lastSeen <= request.time - duration.value(55,'s');
+   allow delete: if false;
+  }
   match /{document=**} { allow read, write: if false; }
  }
 }

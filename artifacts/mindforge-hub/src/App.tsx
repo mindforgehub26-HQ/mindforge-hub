@@ -32,14 +32,14 @@ class PrivatePageBoundary extends Component<{children: ReactNode}, {failed: bool
 
 function AppContent() {
   const [location] = useLocation();
-  const isAdminPath = /^\/(admin|dashboard)(\/|$)/.test(location) || location === '/sign-in';
+  const isAdminPath = /^\/(admin|dashboard|account)(\/|$)/.test(location) || location === '/sign-in';
 
   return (
     <div className="min-h-screen flex flex-col">
       <Seo />
       <Analytics />
       <a className="skip-link" href="#main-content">Skip to content</a>
-      {!isAdminPath && <Navbar />}
+      {(!isAdminPath || location.startsWith("/account")) && <Navbar />}
       <main id="main-content" tabIndex={-1} className="flex-1">
         <PrivatePageBoundary key={location}><Suspense fallback={<p role="status" className="pt-28 text-center">Loading account service…</p>}>
         {isAdminPath ? <Platform/> : <Switch>
@@ -61,7 +61,7 @@ function AppContent() {
         </Switch>}
         </Suspense></PrivatePageBoundary>
       </main>
-      {!isAdminPath && <Footer />}
+      {(!isAdminPath || location.startsWith("/account")) && <Footer />}
       {!isAdminPath && <WhatsAppButton />}
     </div>
   );

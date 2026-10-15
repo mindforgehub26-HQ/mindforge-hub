@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Menu, X, ArrowUpRight } from "lucide-react";
+import AccountActions from "./AccountActions";
 import ThemeToggle from "./ThemeToggle";
 const links = [
   ["/", "Home"],
@@ -33,9 +34,7 @@ export default function Navbar() {
         </nav>
         <div className="nav-actions">
           <ThemeToggle />
-          <Link className="nav-sign-in" href="/sign-in">
-            Sign in
-          </Link>
+          <div className="nav-sign-in flex items-center gap-3"><AccountActions /></div>
           <Link className="btn-primary nav-cta" href="/contact">
             Discuss your project
             <ArrowUpRight size={16} />
@@ -73,9 +72,7 @@ export default function Navbar() {
               {label}
             </Link>
           ))}
-          <Link href="/sign-in" onClick={() => setOpen(false)}>
-            Sign in / My workspace
-          </Link>
+          <AccountActions />
           <Link
             href="/contact"
             className="btn-primary"

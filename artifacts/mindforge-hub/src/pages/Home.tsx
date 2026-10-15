@@ -26,13 +26,13 @@ export default function Home() {
             <span>to building them.</span>
           </h1>
           <p className="hero-copy">
-            Practical technical guidance for your software project,
+            Software project guidance, documentation and viva support for students. Practical help for your software project,
             documentation and presentation. Understand the work. Make your next
             step count.
           </p>
           <div className="button-row">
-            <Link href="/contact" className="btn-primary">
-              Discuss your project
+            <Link href="/account/new" className="btn-primary">
+              Submit project enquiry
               <ArrowUpRight size={18} />
             </Link>
             <Link href="/services" className="btn-outline">
@@ -40,8 +40,9 @@ export default function Home() {
               <ArrowRight size={17} />
             </Link>
           </div>
+          <Link href="/sign-in" className="btn-outline mt-5">Sign up / Sign in with Google</Link>
           <p className="hero-footnote">
-            Clear scope. Agreed pricing. Support with a purpose.
+            Indicative prices: PPT ₹300–₹1,000 · reports ₹500–₹1,500. Software projects are quoted after reviewing your requirements.
           </p>
         </div>
         <div

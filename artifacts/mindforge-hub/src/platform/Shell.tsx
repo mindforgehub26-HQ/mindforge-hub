@@ -28,7 +28,7 @@ export default function Shell({
   const [path] = useLocation();
   const [open, setOpen] = useState(false);
   const session = useSession();
-  const base = admin ? "/admin" : "/dashboard";
+  const base = admin ? "/admin" : "/account";
   const links = admin
     ? ([
         ["", "Overview", LayoutDashboard],
@@ -48,6 +48,7 @@ export default function Shell({
         ["/new", "Submit enquiry", FileText],
         ["/settings", "Profile & settings", Settings],
       ] as const);
+  if (!admin) return <section className="container py-10"><nav className="button-row mb-8" aria-label="My account"><Link href="/">Home</Link><Link href="/account/new">Submit enquiry</Link><Link href="/account/projects">My project status</Link><Link href="/account/enquiries">My enquiries</Link><Link href="/account/settings">My profile</Link></nav>{children}</section>;
   return (
     <div className="workspace">
       <aside className={`workspace-sidebar ${open ? "is-open" : ""}`}>
@@ -89,7 +90,7 @@ export default function Shell({
           {session.admin && (
             <Link
               className="workspace-link"
-              href={admin ? "/dashboard" : "/admin"}
+              href={admin ? "/account" : "/admin"}
             >
               {admin ? "Customer workspace" : "Admin workspace"}
             </Link>

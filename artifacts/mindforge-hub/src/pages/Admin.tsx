@@ -6,6 +6,7 @@ import {
 } from "firebase/firestore";
 import { auth, db } from "../firebase/config";
 import { useToast } from "../components/Toast";
+import { isAllowedAdmin } from "../platform/admin-policy";
 import { useLocation } from "wouter";
 
 
@@ -59,7 +60,7 @@ export default function Admin() {
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
-      const permitted = u ? await Promise.all([u.getIdTokenResult(), getDoc(doc(db, "access", u.uid))]).then(([token, access])=> token.claims.admin === true && access.data()?.role === "admin").catch(()=>false) : false;
+      const permitted = u ? await Promise.all([u.getIdTokenResult(), getDoc(doc(db, "access", u.uid))]).then(([token, access])=> isAllowedAdmin(u.email) && token.signInProvider === "google.com" && token.claims.admin === true && access.data()?.role === "admin").catch(()=>false) : false;
       if (u && u.emailVerified && permitted) {
         setUser(u);
         fetchAll();

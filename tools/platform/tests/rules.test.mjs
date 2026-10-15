@@ -10,6 +10,7 @@ import {
   setDoc,
   getDoc,
   getDocs,
+  getCountFromServer,
   collection,
   query,
   where,
@@ -35,7 +36,8 @@ after(async () => {
 });
 const context = (uid, claims = {}) =>
   env.authenticatedContext(uid, {
-    email: uid + "@example.test",
+    email: uid === "owner" ? "mindforgehub26@gmail.com" : uid + "@example.test",
+    firebase: { sign_in_provider: "google.com" },
     email_verified: true,
     ...claims,
   });
@@ -350,4 +352,39 @@ test("Storage enforces ownership, content type and authentication for legacy pay
   await assertFails(getBytes(ref(other, path)));
   await assertFails(getBytes(ref(anon, path)));
   await assertSucceeds(getBytes(ref(owner, path)));
+});
+
+
+test("Only the two verified Google identities may use a provisioned admin role", async () => {
+  for (const email of ["mindforgehub26@gmail.com", "dayanandmk.dev@gmail.com"]) {
+    await assertSucceeds(getDocs(collection(db("owner", { admin: true, email }), "users")));
+  }
+  for (const claims of [
+    { email: "other@gmail.com" },
+    { email: "mindforgehub26@gmail.com.attacker.test" },
+    { email_verified: false },
+    { firebase: { sign_in_provider: "password" } },
+  ]) {
+    await assertFails(getDocs(collection(db("owner", { admin: true, ...claims }), "users")));
+  }
+});
+
+
+test("Visitor presence is private, owner-only, timestamp-validated and throttled", async () => {
+ const anon = db("visit-one", {email_verified:false, firebase:{sign_in_provider:"anonymous"}});
+ const ref = doc(anon,"visitorPresence/visit-one");
+ await assertSucceeds(setDoc(ref,{createdAt:timestamp(),lastSeen:timestamp()}));
+ await assertFails(updateDoc(ref,{lastSeen:timestamp()}));
+ await assertFails(updateDoc(ref,{email:"private@example.test"}));
+ await assertFails(setDoc(doc(anon,"visitorPresence/another"),{createdAt:timestamp(),lastSeen:timestamp()}));
+ await assertFails(getDocs(collection(anon,"visitorPresence")));
+ await assertFails(getCountFromServer(collection(db("alice"),"visitorPresence")));
+ await assertFails(getDoc(doc(db("bob"),"visitorPresence/visit-one")));
+ await assertFails(setDoc(doc(db("alice"),"visitorPresence/alice"),{createdAt:timestamp(),lastSeen:timestamp()}));
+ const count = await assertSucceeds(getCountFromServer(collection(db("owner",{admin:true}),"visitorPresence")));
+ if(count.data().count !== 1) throw new Error("Unexpected visitor count");
+ await seed(d => updateDoc(doc(d,"visitorPresence/visit-one"),{lastSeen:Timestamp.fromMillis(Date.now()-70000)}));
+ await assertSucceeds(updateDoc(ref,{lastSeen:timestamp()}));
+ await assertFails(updateDoc(ref,{lastSeen:Timestamp.fromMillis(Date.now()+999999)}));
+ await assertFails(deleteDoc(ref));
 });

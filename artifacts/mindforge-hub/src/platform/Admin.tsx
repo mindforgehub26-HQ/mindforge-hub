@@ -24,6 +24,7 @@ import {
   type Row,
 } from "./data";
 
+import VisitorStats from "./VisitorStats";
 function SaveForm({
   children,
   save,
@@ -177,6 +178,7 @@ function Overview() {
   const error = enquiries.error || projects.error || customers.error;
   return (
     <>
+      <VisitorStats />
       <Heading
         title="Business overview"
         description="Real enquiries, active work and the next decisions to make."
