@@ -9,22 +9,36 @@ const ctx=await browser.newContext();
 await ctx.route('**/*',r=>/^(http|ws):\/\/(localhost|127\.0\.0\.1):/.test(r.request().url())?r.continue():r.abort());
 const page=await ctx.newPage();
 try {
+ const before=new Set((await db.collection('visitorPresence').get()).docs.map(d=>d.id));
  await page.goto('http://localhost:5173/');
- await page.getByRole('button',{name:'Allow analytics',exact:true}).waitFor();
- assert.equal((await db.collection('visitorPresence').get()).size,0);
- await page.getByRole('button',{name:'Allow analytics',exact:true}).click();
+ await page.getByRole('heading',{level:1}).waitFor();
+ assert.equal(await page.getByRole('button',{name:'Allow analytics',exact:true}).count(),0);
  let visits;
- for(let i=0;i<40;i++){visits=await db.collection('visitorPresence').get();if(visits.size)break;await new Promise(r=>setTimeout(r,250));}
- assert.equal(visits.size,1);
- assert.deepEqual(Object.keys(visits.docs[0].data()).sort(),['createdAt','lastSeen']);
+ for(let i=0;i<40;i++){visits=await db.collection('visitorPresence').get();if(visits.size>before.size)break;await new Promise(r=>setTimeout(r,250));}
+ assert.equal(visits.size,before.size+1);
+ assert.deepEqual(Object.keys(visits.docs.find(d=>!before.has(d.id)).data()).sort(),['createdAt','lastSeen']);
  assert.equal(await page.evaluate(async()=>{const {auth}=await import('/src/firebase/config.ts');return auth.currentUser?.uid || null;}),null);
  await page.reload();await page.getByRole('heading',{level:1}).waitFor();
- assert.equal((await db.collection('visitorPresence').get()).size,1);
+ assert.equal((await db.collection('visitorPresence').get()).size,before.size+1);
  await page.goto('http://localhost:5173/account/new');
  await page.getByRole('button',{name:'Continue with Google',exact:true}).waitFor();
  await page.goto('http://localhost:5173/privacy');
- await page.getByRole('button',{name:'Withdraw analytics consent'}).click();
+ await page.getByRole('button',{name:'Stop visitor counting in this browser'}).click();
  await page.waitForLoadState('domcontentloaded');
  assert.equal(await page.evaluate(()=>localStorage.getItem('analytics-consent')),'denied');
- console.log('Visitor tracking browser checks passed: opt-in, session deduplication, timestamp-only data, isolated auth, protected enquiry, withdrawal.');
+ const stopped=(await db.collection('visitorPresence').get()).docs.find(d=>!before.has(d.id));
+ const lastSeen=stopped.data().lastSeen.toMillis();
+ await page.goto('http://localhost:5173/');
+ await page.getByRole('heading',{level:1}).waitFor();
+ await page.waitForTimeout(1500);
+ assert.equal((await db.doc(stopped.ref.path).get()).data().lastSeen.toMillis(),lastSeen);
+ assert.equal(await page.locator('script[src*="googletagmanager"]').count(),0);
+ const prior=await browser.newContext();
+ await prior.addInitScript(()=>localStorage.setItem('analytics-consent','denied'));
+ await prior.route('**/*',r=>/^(http|ws):\/\/(localhost|127\.0\.0\.1):/.test(r.request().url())?r.continue():r.abort());
+ const priorPage=await prior.newPage();await priorPage.goto('http://localhost:5173/');
+ await priorPage.getByRole('heading',{level:1}).waitFor();await priorPage.waitForTimeout(1500);
+ assert.equal((await db.collection('visitorPresence').get()).size,before.size+1);
+ await prior.close();
+ console.log('Visitor tracking browser checks passed: automatic counting, session deduplication, timestamp-only data, isolated auth, protected enquiry, withdrawal.');
 } finally {await browser.close();}

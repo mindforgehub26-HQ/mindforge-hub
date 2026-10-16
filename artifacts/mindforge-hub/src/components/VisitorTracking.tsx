@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useLocation } from "wouter";
-import { consentGranted } from "@/lib/analytics";
+import { visitorCountingAllowed } from "@/lib/analytics";
 import { publicPaths } from "@/lib/site";
 export const visitorTrackingConfigured = import.meta.env.VITE_VISITOR_STATS_ENABLED === "true";
 export default function VisitorTracking() {
@@ -8,7 +8,7 @@ export default function VisitorTracking() {
  useEffect(() => {
   if (!visitorTrackingConfigured || !publicPaths.includes(path)) return;
   let active = true, busy = false;
-  const allowed = () => active && consentGranted() && document.visibilityState === "visible";
+  const allowed = () => active && visitorCountingAllowed() && document.visibilityState === "visible";
   const tick = async () => {
    if (!allowed() || busy) return;
    busy=true;
